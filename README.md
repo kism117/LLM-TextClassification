@@ -198,7 +198,19 @@ weighted avg       0.96      0.96      0.96      1001
 （2）lora+deepseek+分类层结果
 
 ```bash
+              precision    recall  f1-score   support
 
+           0       0.78      0.48      0.59       154
+           1       0.89      0.67      0.76       130
+           2       0.59      0.94      0.72       135
+           3       0.66      0.88      0.75       156
+           4       0.82      0.52      0.63       130
+           5       0.66      0.60      0.63       158
+           6       0.76      0.86      0.80       138
+
+    accuracy                           0.70      1001
+   macro avg       0.73      0.71      0.70      1001
+weighted avg       0.73      0.70      0.70      1001
 ```
 
 （3）[bert-base-chinese分类](https://github.com/Dylan9897/ai-nlp-project/tree/main/TextClassification)结果对比：

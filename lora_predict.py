@@ -44,7 +44,8 @@ lora_config = LoraConfig(
     target_modules=lora_args.lora_target_modules,
     lora_dropout=lora_args.lora_dropout,
     bias=lora_args.lora_bias,
-    task_type="SEQ_CLS"
+    # task_type="SEQ_CLS"
+    task_type="CAUSAL_LM"
 )
 model = get_peft_model(model, lora_config)
 
