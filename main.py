@@ -54,7 +54,8 @@ def train(verbose=False):
             target_modules=lora_args.lora_target_modules,
             lora_dropout=lora_args.lora_dropout,
             bias=lora_args.lora_bias,
-            task_type="SEQ_CLS",
+            # task_type="SEQ_CLS",
+            task_type="CAUSAL_LM",
             modules_to_save=modules_to_save  # This argument serves for adding new tokens.
         )
         model = get_peft_model(model, lora_config)
