@@ -1,0 +1,2 @@
+# LLM-TextClassification
+集成Qwen与DeepSeek等先进大语言模型，支持纯LLM+分类层模式及LLM+LoRA+分类层模式，使用transformers模块化设计和训练便于根据需要调整或替换组件。
