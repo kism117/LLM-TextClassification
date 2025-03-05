@@ -1,15 +1,12 @@
-# encoding : utf-8 -*-                            
-# @author  : 冬瓜                              
-# @mail    : dylan_han@126.com    
-# @Time    : 2025/3/2 11:38
 import os
 import transformers
+from transformers import GPTQConfig
 from datasets import load_dataset
 from transformers import AutoModelForSequenceClassification
-from module.argument import ModelArguments, DataArguments, TrainingArguments, LoraArguments
+from module.argument import ModelArguments,DataArguments,TrainingArguments,LoraArguments
 
 from peft import LoraConfig, get_peft_model
-
+from module.adapter import create_and_replace
 
 def train(verbose=False):
     global local_rank
@@ -23,6 +20,9 @@ def train(verbose=False):
         training_args,
         lora_args,
     ) = parser.parse_args_into_dataclasses()
+    
+
+    device_map = None
 
     # Set RoPE scaling factor
     config = transformers.AutoConfig.from_pretrained(
@@ -34,8 +34,22 @@ def train(verbose=False):
     config.use_cache = False
     print(f"checkpoint for config is {config}")
 
-    model = AutoModelForSequenceClassification.from_pretrained(model_args.model_name_or_path, num_labels=7)
+    # Load model and tokenizer
+    # model = transformers.AutoModelForCausalLM.from_pretrained(
+    #     model_args.model_name_or_path,
+    #     config=config,
+    #     cache_dir=training_args.cache_dir,
+    #     device_map=device_map,
+    #     trust_remote_code=True,
+    #     quantization_config=GPTQConfig(
+    #         bits=4, disable_exllama=True
+    #     )
+    #     if training_args.use_lora and lora_args.q_lora
+    #     else None,
+    # )
+    model = AutoModelForSequenceClassification.from_pretrained(model_args.model_name_or_path , num_labels=7)  
     model.config.pad_token_id = 151643
+    
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         cache_dir=training_args.cache_dir,
@@ -45,8 +59,13 @@ def train(verbose=False):
         trust_remote_code=True,
     )
 
+
+
+    if model_args.add_adapter:
+        create_and_replace(model)
+
     if training_args.use_lora:
-        modules_to_save = ["score"]
+        modules_to_save = ["score",'embed_tokens']
 
         lora_config = LoraConfig(
             r=lora_args.lora_r,
@@ -54,8 +73,8 @@ def train(verbose=False):
             target_modules=lora_args.lora_target_modules,
             lora_dropout=lora_args.lora_dropout,
             bias=lora_args.lora_bias,
-            # task_type="SEQ_CLS",
             task_type="CAUSAL_LM",
+            # task_type="SEQ_CLS",
             modules_to_save=modules_to_save  # This argument serves for adding new tokens.
         )
         model = get_peft_model(model, lora_config)
@@ -66,11 +85,16 @@ def train(verbose=False):
         if training_args.gradient_checkpointing:
             model.enable_input_require_grads()
 
-    for name, param in model.named_parameters():
-        # 检查是否是需要设置为可更新的参数
-        if name == "base_model.model.score.weight":
-            print(f"Setting {name} to be updateable.")
-            param.requires_grad = True
+        for name, param in model.named_parameters():
+            # 检查是否是需要设置为可更新的参数
+            if name == "base_model.model.score.weight":
+                print(f"Setting {name} to be updateable.")
+                param.requires_grad = True
+            elif name == "base_model.model.model.embed_tokens.weight":
+                print(f"Setting {name} to be updateable.")
+                param.requires_grad = True
+            else:
+                pass
 
     # 检查模型的梯度
     if verbose:
@@ -79,17 +103,19 @@ def train(verbose=False):
                 print(f"Parameter Name: {name}, Updateable: True")
             else:
                 print(f"Parameter Name: {name}, Updateable: False")
-
+                    
         s = input()
 
+    # print(model)
+    # exit("exiting......")
     def process_function(examples):
         examples["label"] = [int(unit) for unit in examples["label"]]
-        return tokenizer(examples["content"], padding="max_length", truncation=True)
+        return tokenizer(examples["content"], padding="max_length",truncation=True)
 
     def load_data(dataset):
         # 加载训练和验证数据集
         dataset = load_dataset("json", data_files={"train": os.path.join(data_args.data_path, "train.json"),
-                                                   "valid": os.path.join(data_args.data_path, "dev.json")})
+                                                "valid": os.path.join(data_args.data_path, "dev.json")})
         # 使用 map 方法应用数据处理函数，并设置 batched=True 以批量处理数据
         processed_dataset = dataset.map(process_function, batched=True, batch_size=16)
         # 移除不再需要的列，比如 'content' 和 'metadata'
