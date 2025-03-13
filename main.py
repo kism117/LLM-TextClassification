@@ -6,7 +6,7 @@ from transformers import AutoModelForSequenceClassification
 from module.argument import ModelArguments,DataArguments,TrainingArguments,LoraArguments
 
 from peft import LoraConfig, get_peft_model
-from module.adapter import create_and_replace
+# from module.adapter import create_and_replace
 
 def train(verbose=False):
     global local_rank
@@ -60,10 +60,10 @@ def train(verbose=False):
     )
 
 
-
+    """
     if model_args.add_adapter:
         create_and_replace(model)
-
+    """
     if training_args.use_lora:
         modules_to_save = ["score",'embed_tokens']
 
