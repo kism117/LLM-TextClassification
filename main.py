@@ -6,7 +6,7 @@ from transformers import AutoModelForSequenceClassification
 from module.argument import ModelArguments,DataArguments,TrainingArguments,LoraArguments
 
 from peft import LoraConfig, get_peft_model
-# from module.adapter import create_and_replace
+from module.adapter import create_and_replace
 
 def train(verbose=False):
     global local_rank
@@ -32,21 +32,7 @@ def train(verbose=False):
         is_training=model_args.is_training
     )
     config.use_cache = False
-    print(f"checkpoint for config is {config}")
 
-    # Load model and tokenizer
-    # model = transformers.AutoModelForCausalLM.from_pretrained(
-    #     model_args.model_name_or_path,
-    #     config=config,
-    #     cache_dir=training_args.cache_dir,
-    #     device_map=device_map,
-    #     trust_remote_code=True,
-    #     quantization_config=GPTQConfig(
-    #         bits=4, disable_exllama=True
-    #     )
-    #     if training_args.use_lora and lora_args.q_lora
-    #     else None,
-    # )
     model = AutoModelForSequenceClassification.from_pretrained(model_args.model_name_or_path , num_labels=7)  
     model.config.pad_token_id = 151643
     
@@ -60,10 +46,9 @@ def train(verbose=False):
     )
 
 
-    """
-    if model_args.add_adapter:
-        create_and_replace(model)
-    """
+
+    
+    # exit()
     if training_args.use_lora:
         modules_to_save = ["score",'embed_tokens']
 
@@ -82,12 +67,11 @@ def train(verbose=False):
         # Print peft trainable params
         model.print_trainable_parameters()
 
-        if training_args.gradient_checkpointing:
-            model.enable_input_require_grads()
+        
 
         for name, param in model.named_parameters():
             # 检查是否是需要设置为可更新的参数
-            if name == "base_model.model.score.weight":
+            if name.startswith("base_model.model.score."):
                 print(f"Setting {name} to be updateable.")
                 param.requires_grad = True
             elif name == "base_model.model.model.embed_tokens.weight":
@@ -95,7 +79,10 @@ def train(verbose=False):
                 param.requires_grad = True
             else:
                 pass
-
+    if model_args.add_adapter:
+        create_and_replace(model)
+    if training_args.gradient_checkpointing:
+        model.enable_input_require_grads()
     # 检查模型的梯度
     if verbose:
         for name, param in model.named_parameters():
@@ -106,8 +93,6 @@ def train(verbose=False):
                     
         s = input()
 
-    # print(model)
-    # exit("exiting......")
     def process_function(examples):
         examples["label"] = [int(unit) for unit in examples["label"]]
         return tokenizer(examples["content"], padding="max_length",truncation=True)
@@ -139,4 +124,4 @@ def train(verbose=False):
 
 
 if __name__ == "__main__":
-    train(verbose=False)
+    train(verbose=True)

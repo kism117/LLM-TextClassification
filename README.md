@@ -213,7 +213,25 @@ weighted avg       0.96      0.96      0.96      1001
 weighted avg       0.89      0.88      0.88      1001
 ```
 
-（3）[bert-base-chinese分类](https://github.com/Dylan9897/ai-nlp-project/tree/main/TextClassification)结果对比：
+（3）lora+deepseek+TemporalAttention分类层的结果
+
+```bash
+              precision    recall  f1-score   support
+
+        教育       0.92      0.87      0.90       154
+        财经       0.81      0.90      0.85       130
+        科技       0.78      0.97      0.87       135
+        房产       0.94      0.85      0.90       156
+        时政       0.85      0.87      0.86       130
+        家居       0.91      0.74      0.82       158
+        时尚       0.94      0.96      0.95       138
+
+    accuracy                           0.88      1001
+   macro avg       0.88      0.88      0.88      1001
+weighted avg       0.88      0.88      0.88      1001
+```
+
+（4）[bert-base-chinese分类](https://github.com/Dylan9897/ai-nlp-project/tree/main/TextClassification)结果对比：
 
 ```bash
                 precision    recall  f1-score   support

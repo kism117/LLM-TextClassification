@@ -4,6 +4,7 @@ from sklearn import metrics
 import transformers
 from safetensors.torch import load_file
 from peft import LoraConfig, get_peft_model
+from module.adapter import create_and_replace
 
 
 
@@ -48,7 +49,9 @@ lora_config = LoraConfig(
     task_type="CAUSAL_LM"
 )
 model = get_peft_model(model, lora_config)
-
+create_and_replace(model)
+# print(model)
+# s = input()
 # 加载保存的权重
 weights = load_file("output_qwen/longnews/adapter_model.safetensors")
 model.load_state_dict(weights, strict=False)

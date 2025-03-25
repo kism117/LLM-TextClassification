@@ -35,12 +35,13 @@ while [[ "$1" != "" ]]; do
 done
 
 export CUDA_VISIBLE_DEVICES=0
-python main.py \
+python lora_predict.py \
   --model_name_or_path $MODEL \
   --is_training True \
+  --add_adapter True \
   --data_path $DATA \
   --bf16 True \
-  --output_dir output_qwen/longnews \
+  --output_dir output_qwen/longnews\
   --num_train_epochs 3 \
   --per_device_train_batch_size 2 \
   --per_device_eval_batch_size 1 \
@@ -49,10 +50,11 @@ python main.py \
   --save_strategy "steps" \
   --save_steps 2000 \
   --save_total_limit 10 \
-  --learning_rate 3e-4 \
+  --learning_rate 5e-4 \
   --weight_decay 0.1 \
   --adam_beta2 0.95 \
   --warmup_ratio 0.01 \
+  --warmup_steps 1000 \
   --lr_scheduler_type "cosine" \
   --logging_steps 1 \
   --report_to "none" \
