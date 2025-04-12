@@ -2,8 +2,11 @@ import json
 from tqdm import tqdm
 from sklearn import metrics
 from transformers import AutoModelForSequenceClassification,AutoTokenizer
+from module.auto_from_pretrained import auto_from_pretrained
 
-model = AutoModelForSequenceClassification.from_pretrained("output_qwen/thucnews")
+#model = AutoModelForSequenceClassification.from_pretrained("output_qwen/thucnews")
+#tokenizer = AutoTokenizer.from_pretrained("output_qwen/thucnews")
+model = auto_from_pretrained.from_pretrained("output_qwen/thucnews")
 tokenizer = AutoTokenizer.from_pretrained("output_qwen/thucnews")
 model.cuda()
 

@@ -4,7 +4,6 @@ from sklearn import metrics
 import transformers
 from safetensors.torch import load_file
 from peft import LoraConfig, get_peft_model
-from module.adapter import create_and_replace
 
 
 
@@ -23,10 +22,11 @@ parser = transformers.HfArgumentParser(
 ) = parser.parse_args_into_dataclasses()
 
 device_map = None
-
+print(model_args.model_name_or_path)
 # Set RoPE scaling factor
 config = transformers.AutoConfig.from_pretrained(
-    model_args.model_name_or_path,
+    #model_args.model_name_or_path,
+    "./ckpt/deepseek-ai/DeepSeek-R1-Distill-Qwen-1___5B",
     cache_dir=training_args.cache_dir,
     trust_remote_code=True,
     is_training=model_args.is_training
@@ -34,7 +34,7 @@ config = transformers.AutoConfig.from_pretrained(
 config.use_cache = False
 print(f"checkpoint for config is {config}")
 
-model = AutoModelForSequenceClassification.from_pretrained("output_qwen/longnews",num_labels=7)
+model = AutoModelForSequenceClassification.from_pretrained("./ckpt/deepseek-ai/DeepSeek-R1-Distill-Qwen-1___5B",num_labels=7)
 tokenizer = AutoTokenizer.from_pretrained("output_qwen/longnews")
 model.config.pad_token_id = 151643
 model.cuda()
@@ -49,9 +49,7 @@ lora_config = LoraConfig(
     task_type="CAUSAL_LM"
 )
 model = get_peft_model(model, lora_config)
-create_and_replace(model)
-# print(model)
-# s = input()
+
 # 加载保存的权重
 weights = load_file("output_qwen/longnews/adapter_model.safetensors")
 model.load_state_dict(weights, strict=False)
@@ -68,6 +66,9 @@ with open("data/datasets/longnews/dev.json","r",encoding="utf-8") as f:
         for key in input_demo.keys():
             input_demo[key] = input_demo[key].cuda()
         output = model(**input_demo)
+        print(output)
+        break
+
         pred = output.logits.argmax().item()
         y_pred.append(pred)
 

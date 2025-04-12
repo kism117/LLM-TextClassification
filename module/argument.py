@@ -16,6 +16,7 @@ class ModelArguments:
     bert_name_or_path: Optional[str] = field(default="bert-base-chinese")  # bert模型文件地址
     is_training: bool = False  # 是否为训练模式
     update_bmlp: bool = False  # bert模型是否更新
+    add_adapter: bool = False
 
 
 @dataclass
